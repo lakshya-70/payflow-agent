@@ -1,0 +1,65 @@
+# PayFlow Agent — Render blueprint (two web services, one repo)
+#
+#   Backend  → payflow-backend   (Express API: :4000 locally, PORT on Render)
+#   Frontend → payflow-frontend  (Next.js dashboard)
+#
+# Secrets are NOT in this file — set the sync:false env vars in the Render
+# dashboard (or via `render blueprint launch` prompt) after connecting the repo:
+#   PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, OPENAI_API_KEY (required)
+#   PAYPAL_ENV=sandbox, PAYPAL_MCP_TOOLS, PAYOUTS_MODE, PAYFLOW_APPROVAL_THRESHOLD (optional)
+#
+# Deploy:  render blueprint launch   (from the repo root), or Dashboard → New → Blueprint.
+
+services:
+  - type: web
+    name: payflow-backend
+    runtime: node
+    plan: free
+    rootDir: .
+    # Workspaces monorepo: install everything, typecheck, compile backend TS.
+    buildCommand: npm install && npm run build --workspace backend
+    # The PayPal MCP server is spawned as a child process (needs node on PATH).
+    startCommand: node backend/dist/server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: PAYPAL_ENV
+        value: sandbox
+      # NOTE: do NOT set PORT — Render injects it and the API binds to it.
+      - key: PAYFLOW_APPROVAL_THRESHOLD
+        sync: false
+      - key: PAYOUTS_MODE
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: PAYPAL_MCP_TOOLS
+        value: orders.get,transactions.list,payments.createRefund,payments.getRefunds
+      # Render sets its own PORT — keep Node listening on it.
+      - key: EXPRESS_PORT
+        sync: false
+
+  - type: web
+    name: payflow-frontend
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install && npm run build --workspace frontend
+    startCommand: npm run start --workspace frontend
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # The dashboard talks to the backend service directly (same blueprint).
+      - key: NEXT_PUBLIC_API_URL
+        sync: false     # set to https://payflow-backend.onrender.com after first deploy

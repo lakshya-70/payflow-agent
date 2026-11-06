@@ -1,0 +1,23 @@
+{
+  "name": "payflow-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PayFlow Agent — multi-agent platform for autonomous PayPal checkout, automated gig payouts and agent observability (PayPal AI Hackathon).",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c blue,magenta \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\"",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "smoke:mcp": "npm run smoke:mcp --workspace backend",
+    "tools:dry-run": "npm run tools:dry-run --workspace backend",
+    "negotiation-check": "npm run negotiation-check --workspace backend",
+    "demo:agent": "npm run demo:agent --workspace backend",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

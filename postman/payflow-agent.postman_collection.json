@@ -1,0 +1,95 @@
+{
+  "info": {
+    "name": "PayFlow Agent — PayPal AI Hackathon",
+    "_postman_id": "2f3ee4a5-8f4a-4bb0-9f4d-6f5ff7f9c001",
+    "description": "Full API surface of PayFlow Agent (sandbox). Set the collection variable baseUrl (default http://localhost:4000). Agent chat requires OPENAI_API_KEY + sandbox credentials in backend/.env; money stays in the PayPal sandbox.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "transactionId", "value": "" },
+    { "key": "gigId", "value": "" },
+    { "key": "paypalOrderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        { "name": "Health snapshot", "request": { "method": "GET", "url": "{{baseUrl}}/api/health" } },
+        { "name": "Storefront catalog", "request": { "method": "GET", "url": "{{baseUrl}}/api/catalog?query=keyboard&max_price=150" } },
+        { "name": "Agent tool list", "request": { "method": "GET", "url": "{{baseUrl}}/api/agent/tools" } }
+      ]
+    },
+    {
+      "name": "Agent",
+      "item": [
+        {
+          "name": "Chat — buy something",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Buy me the best mechanical keyboard under $100\",\n  \"history\": []\n}" },
+            "url": "{{baseUrl}}/api/agent/chat"
+          }
+        },
+        {
+          "name": "Chat — payout a freelancer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Pay priya.dev@example.com $60 for finishing the hero section — task G-12\",\n  \"history\": []\n}" },
+            "url": "{{baseUrl}}/api/agent/chat"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        { "name": "All transactions", "request": { "method": "GET", "url": "{{baseUrl}}/api/transactions?limit=50" } },
+        { "name": "Orders only", "request": { "method": "GET", "url": "{{baseUrl}}/api/transactions?kind=order" } },
+        { "name": "Approve pending order", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"note\": \"approved from Postman\" }" }, "url": "{{baseUrl}}/api/transactions/{{transactionId}}/approve" } },
+        { "name": "Reject pending order", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"note\": \"too expensive\" }" }, "url": "{{baseUrl}}/api/transactions/{{transactionId}}/reject" } }
+      ]
+    },
+    {
+      "name": "PayPal orders",
+      "item": [
+        { "name": "JS SDK config", "request": { "method": "GET", "url": "{{baseUrl}}/api/paypal/config" } },
+        { "name": "Capture approved order", "request": { "method": "POST", "url": "{{baseUrl}}/api/paypal/orders/{{paypalOrderId}}/capture" } }
+      ]
+    },
+    {
+      "name": "Gig payouts (Step 4)",
+      "item": [
+        { "name": "List gigs", "request": { "method": "GET", "url": "{{baseUrl}}/api/gigs" } },
+        { "name": "Submit work", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"summary\": \"Delivered the responsive hero section: headline, sub-copy and CTA, mobile-first CSS, Lighthouse 98.\"\n}" }, "url": "{{baseUrl}}/api/gigs/{{gigId}}/submit" } },
+        { "name": "Run LLM quality review", "request": { "method": "POST", "url": "{{baseUrl}}/api/gigs/{{gigId}}/review" } },
+        { "name": "Release payout", "request": { "method": "POST", "url": "{{baseUrl}}/api/gigs/{{gigId}}/payout" } }
+      ]
+    },
+    {
+      "name": "Webhooks (Step 4)",
+      "item": [
+        {
+          "name": "Simulate CHECKOUT.ORDER.APPROVED",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"WH-demo-1\",\n  \"event_type\": \"CHECKOUT.ORDER.APPROVED\",\n  \"resource_type\": \"checkout_order\",\n  \"resource\": { \"id\": \"{{paypalOrderId}}\" }\n}" },
+            "url": "{{baseUrl}}/api/webhooks/paypal"
+          }
+        },
+        {
+          "name": "Simulate PAYMENT.CAPTURE.COMPLETED",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"WH-demo-2\",\n  \"event_type\": \"PAYMENT.CAPTURE.COMPLETED\",\n  \"resource_type\": \"capture\",\n  \"resource\": {\n    \"id\": \"{{paypalOrderId}}\",\n    \"purchase_units\": [{ \"custom_id\": \"{{transactionId}}\" }]\n  }\n}" },
+            "url": "{{baseUrl}}/api/webhooks/paypal"
+          }
+        }
+      ]
+    }
+  ]
+}

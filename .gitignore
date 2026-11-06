@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Builds
+backend/dist/
+frontend/.next/
+frontend/out/
+
+# Environment files (secrets!) — examples are committed
+.env
+.env.local
+.env.*
+!.env.example
+
+# Misc
+*.log
+coverage/
+.DS_Store
+*.tsbuildinfo
+.vercel/
