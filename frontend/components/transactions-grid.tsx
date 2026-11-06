@@ -9,10 +9,14 @@
  */
 import { useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { themeQuartz, type ColDef, type ICellRendererParams } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry, themeQuartz, type ColDef, type ICellRendererParams } from "ag-grid-community";
 
 import type { TransactionRecord } from "@/lib/api";
 import { StatusPill, formatTime, formatUsd, paypalRef } from "@/components/shared";
+
+// AG Grid v33 requires explicit module registration before any grid mounts —
+// without this the grid mounts empty (console error #272). Registration is idempotent.
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 const gridTheme = themeQuartz.withParams({
   accentColor: "#22d3ee",
