@@ -17,7 +17,10 @@ services:
     plan: free
     rootDir: .
     # Workspaces monorepo: install everything, typecheck, compile backend TS.
-    buildCommand: npm install && npm run build --workspace backend
+    # --include=dev is REQUIRED: Render builds with NODE_ENV=production, which makes
+    # npm omit devDependencies (typescript types live there) and the tsc build dies
+    # with TS7016/TS7006 (implicit any everywhere).
+    buildCommand: npm install --include=dev && npm run build --workspace backend
     # The PayPal MCP server is spawned as a child process (needs node on PATH).
     startCommand: node backend/dist/server.js
     healthCheckPath: /api/health
@@ -55,7 +58,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm install && npm run build --workspace frontend
+    buildCommand: npm install --include=dev && npm run build --workspace frontend
     startCommand: npm run start --workspace frontend
     envVars:
       - key: NODE_VERSION
